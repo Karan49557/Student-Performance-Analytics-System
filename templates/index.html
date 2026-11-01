@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Performance & Analytics Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @media print {
+      .no-print { display: none !important; }
+      body { background: white; color: black; padding: 0; }
+    }
+  </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen p-4 md:p-8 font-sans">
+
+  <div class="max-w-7xl mx-auto space-y-6">
+
+    <!-- Header -->
+    <header class="bg-slate-800 border border-slate-700 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="p-2.5 bg-indigo-600 rounded-xl">
+          <i class="fa-solid fa-chart-line text-white text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl font-bold text-white">Student Analytics Engine</h1>
+          <p class="text-slate-400 text-sm">Flask & Python powered academic performance & statistics dashboard</p>
+        </div>
+      </div>
+      <div class="flex gap-2 no-print">
+        <button onclick="window.print()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold rounded-lg transition flex items-center space-x-2 shadow-lg shadow-indigo-600/30">
+          <i class="fa-solid fa-print"></i>
+          <span>Print Report</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Metrics Cards Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+        <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Total Students</div>
+        <div id="metricCount" class="text-2xl font-extrabold text-white">0</div>
+      </div>
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+        <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Class Average</div>
+        <div id="metricMean" class="text-2xl font-extrabold text-indigo-400">0</div>
+      </div>
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+        <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Median Score</div>
+        <div id="metricMedian" class="text-2xl font-extrabold text-sky-400">0</div>
+      </div>
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+        <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Pass Rate</div>
+        <div id="metricPassRate" class="text-2xl font-extrabold text-emerald-400">0%</div>
+      </div>
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+        <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Highest / Lowest</div>
+        <div id="metricRange" class="text-2xl font-extrabold text-amber-400">0 / 0</div>
+      </div>
+      <div class="bg-slate-800 p-4 rounded-xl border border-slate-700 shadow-md">
+        <div class="text-slate-400 text-xs font-medium uppercase tracking-wider mb-1">Std Deviation</div>
+        <div id="metricStd" class="text-2xl font-extrabold text-purple-400">0</div>
+      </div>
+    </div>
+
+    <!-- Main Section: Form & Charts -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      
+      <!-- Left Column: Add Form & Tools -->
+      <div class="space-y-6 no-print">
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-4">
+          <h2 class="text-base font-bold text-slate-200 border-b border-slate-700 pb-2 flex items-center space-x-2">
+            <i class="fa-solid fa-user-plus text-indigo-400"></i>
+            <span>Add Student Entry</span>
+          </h2>
+          <form id="addStudentForm" onsubmit="handleAddStudent(event)" class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Student Name</label>
+              <input type="text" id="inputName" placeholder="e.g. Rahul Sharma" required
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+            </div>
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Score (0 - 100)</label>
+              <input type="number" id="inputScore" min="0" max="100" placeholder="e.g. 88" required
+                class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2.5 text-sm text-slate-200 focus:outline-none focus:border-indigo-500 transition">
+            </div>
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-lg text-sm transition shadow-lg shadow-indigo-600/30">
+              Add Record
+            </button>
+          </form>
+        </div>
+
+        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-lg space-y-3">
+          <h3 class="text-sm font-bold text-slate-300">Quick Actions</h3>
+          <button onclick="clearAllData()" class="w-full bg-rose-900/30 hover:bg-rose-900/50 text-rose-300 text-xs font-semibold py-2 rounded-lg transition border border-rose-800">
+            Clear All Records
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Column: Charts -->
+      <div class="lg:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg space-y-2">
+          <h3 class="text-sm font-bold text-slate-300">Score Distribution</h3>
+          <div class="h-60 relative">
+            <canvas id="barChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg space-y-2">
+          <h3 class="text-sm font-bold text-slate-300">Grade Breakdown</h3>
+          <div class="h-60 relative flex items-center justify-center">
+            <canvas id="doughnutChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Data Table & Search -->
+    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-lg overflow-hidden">
+      <div class="p-4 md:p-6 border-b border-slate-700 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-200">Student Directory</h2>
+          <p class="text-xs text-slate-400">View and manage student records</p>
+        </div>
+        <div class="w-full md:w-60 no-print">
+          <input type="text" id="searchInput" oninput="renderTable()" placeholder="Search name..."
+            class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500">
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-slate-900/50 text-slate-400 uppercase tracking-wider border-b border-slate-700">
+            <tr>
+              <th class="p-3.5">Student Name</th>
+              <th class="p-3.5">Score</th>
+              <th class="p-3.5">Grade</th>
+              <th class="p-3.5">Status</th>
+              <th class="p-3.5 text-right no-print">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="studentTableBody" class="divide-y divide-slate-700/50 text-slate-300"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    let students = [];
+    let barChartInstance = null;
+    let doughnutChartInstance = null;
+
+    function fetchStudents() {
+      fetch('/api/students')
+        .then(res => res.json())
+        .then(data => {
+          students = data;
+          updateMetrics();
+          renderTable();
+          updateCharts();
+        });
+    }
+
+    function getGrade(score) {
+      if (score >= 90) return { grade: 'A+', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' };
+      if (score >= 75) return { grade: 'A', color: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' };
+      if (score >= 60) return { grade: 'B', color: 'bg-sky-500/20 text-sky-400 border-sky-500/30' };
+      if (score >= 40) return { grade: 'C', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30' };
+      return { grade: 'F', color: 'bg-rose-500/20 text-rose-400 border-rose-500/30' };
+    }
+
+    function handleAddStudent(e) {
+      e.preventDefault();
+      const name = document.getElementById('inputName').value.trim();
+      const score = parseFloat(document.getElementById('inputScore').value);
+
+      if (!name || isNaN(score)) return;
+
+      fetch('/api/students', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: Date.now(), name, score })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if(data.success) {
+          students = data.students;
+          document.getElementById('addStudentForm').reset();
+          updateMetrics();
+          renderTable();
+          updateCharts();
+        }
+      });
+    }
+
+    function deleteStudent(id) {
+      fetch(`/api/students/${id}`, { method: 'DELETE' })
+        .then(res => res.json())
+        .then(data => {
+          if(data.success) {
+            students = data.students;
+            updateMetrics();
+            renderTable();
+            updateCharts();
+          }
+        });
+    }
+
+    function clearAllData() {
+      if (confirm("Are you sure you want to clear all records?")) {
+        fetch('/api/students/clear', { method: 'POST' })
+          .then(res => res.json())
+          .then(data => {
+            students = [];
+            updateMetrics();
+            renderTable();
+            updateCharts();
+          });
+      }
+    }
+
+    function updateMetrics() {
+      const count = students.length;
+      if (count === 0) {
+        ['metricCount','metricMean','metricMedian','metricPassRate','metricRange','metricStd'].forEach(id => {
+          document.getElementById(id).textContent = id === 'metricPassRate' ? '0%' : (id === 'metricRange' ? '0 / 0' : '0');
+        });
+        return;
+      }
+
+      const scores = students.map(s => s.score);
+      const mean = scores.reduce((a, b) => a + b, 0) / count;
+      const sorted = [...scores].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      const median = sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+      const passed = scores.filter(s => s >= 40).length;
+      const passRate = ((passed / count) * 100).toFixed(0);
+      const max = Math.max(...scores);
+      const min = Math.min(...scores);
+      const variance = scores.reduce((sq, n) => sq + Math.pow(n - mean, 2), 0) / count;
+      const stdDev = Math.sqrt(variance);
+
+      document.getElementById('metricCount').textContent = count;
+      document.getElementById('metricMean').textContent = mean.toFixed(1);
+      document.getElementById('metricMedian').textContent = median.toFixed(1);
+      document.getElementById('metricPassRate').textContent = `${passRate}%`;
+      document.getElementById('metricRange').textContent = `${max} / ${min}`;
+      document.getElementById('metricStd').textContent = stdDev.toFixed(1);
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('studentTableBody');
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const filtered = students.filter(s => s.name.toLowerCase().includes(search));
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">No student records found.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(s => {
+        const gradeInfo = getGrade(s.score);
+        const isPass = s.score >= 40;
+        return `
+          <tr class="hover:bg-slate-700/30 transition">
+            <td class="p-3.5 font-medium text-slate-200">${s.name}</td>
+            <td class="p-3.5 font-bold text-slate-100">${s.score}</td>
+            <td class="p-3.5"><span class="px-2.5 py-0.5 rounded-full text-xs border font-bold ${gradeInfo.color}">${gradeInfo.grade}</span></td>
+            <td class="p-3.5"><span class="${isPass ? 'text-emerald-400' : 'text-rose-400'} font-semibold">${isPass ? 'Pass' : 'Fail'}</span></td>
+            <td class="p-3.5 text-right no-print">
+              <button onclick="deleteStudent(${s.id})" class="p-1.5 text-slate-500 hover:text-rose-400 transition"><i class="fa-solid fa-trash-can"></i></button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function updateCharts() {
+      const labels = students.map(s => s.name);
+      const scores = students.map(s => s.score);
+
+      const ctxBar = document.getElementById('barChart').getContext('2d');
+      if (barChartInstance) barChartInstance.destroy();
+      barChartInstance = new Chart(ctxBar, {
+        type: 'bar',
+        data: { labels, datasets: [{ label: 'Score', data: scores, backgroundColor: 'rgba(99, 102, 241, 0.7)', borderRadius: 6 }] },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+      });
+
+      const gradeCounts = { 'A+': 0, 'A': 0, 'B': 0, 'C': 0, 'F': 0 };
+      students.forEach(s => gradeCounts[getGrade(s.score).grade]++);
+
+      const ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+      if (doughnutChartInstance) doughnutChartInstance.destroy();
+      doughnutChartInstance = new Chart(ctxDoughnut, {
+        type: 'doughnut',
+        data: {
+          labels: ['A+', 'A', 'B', 'C', 'F'],
+          datasets: [{ data: Object.values(gradeCounts), backgroundColor: ['#10b981', '#6366f1', '#0ea5e9', '#f59e0b', '#f43f5e'] }]
+        },
+        options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8' } } } }
+      });
+    }
+
+    window.onload = fetchStudents;
+  </script>
+</body>
+</html>
